@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Address Sorter</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body class="p-4">
+
+    <div class="container">
+        <h1 class="mb-4">IP Address Sorter</h1>
+
+        <div class="form-group">
+            <label for="ipList">IP Addresses:</label>
+            <textarea id="ipList" class="form-control" rows="4" cols="50" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)"></textarea>
+        </div>
+
+        <div class="form-group">
+            <button onclick="sortIPs(true)" class="btn btn-primary mr-2">Ascending Order</button>
+            <button onclick="sortIPs(false)" class="btn btn-primary mr-2">Descending Order</button>
+            <button onclick="copyToClipboard()" class="btn btn-success">
+                <span id="copyMessage">📋 Copy to Clipboard</span>
+            </button>
+        </div>
+
+        <h2>Sorted IP Addresses:</h2>
+        <ul id="sortedList" class="list-group"></ul>
+    </div>
+
+    <button onclick="scrollToTop()" id="scrollToTopBtn" class="btn btn-info btn-lg" style="display:none; position: fixed; bottom: 20px; right: 20px;">Back to Top</button>
+
+    <script>
+        function isValidIP(ip) {
+            return /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
+        }
+
+        function extractIPsFromText(text) {
+            const lines = text.split('\n');
+            const ips = [];
+
+            lines.forEach(function(line) {
+                const matches = line.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g);
+
+                if (matches) {
+                    matches.forEach(function(match) {
+                        if (isValidIP(match)) {
+                            ips.push(match);
+                        }
+                    });
+                }
+            });
+
+            return ips;
+        }
+
+        function convertIP(ip) {
+            return ip.split('.').map(function(num) {
+                return num.padStart(3, '0');
+            }).join('.');
+        }
+
+        function sortIPs(ascending) {
+            const ipText = document.getElementById('ipList').value.trim();
+            const validIPs = extractIPsFromText(ipText);
+            const sortedList = validIPs.sort(function(a, b) {
+                a = convertIP(a);
+                b = convertIP(b);
+                return ascending ? a.localeCompare(b) : b.localeCompare(a);
+            });
+
+            const sortedListElement = document.getElementById('sortedList');
+            sortedListElement.innerHTML = '';
+
+            sortedList.forEach(function(ip) {
+                const listItem = document.createElement('li');
+                listItem.classList.add('list-group-item');
+                listItem.textContent = ip;
+                sortedListElement.appendChild(listItem);
+            });
+
+            toggleScrollToTopBtn();
+        }
+
+        function copyToClipboard() {
+            const sortedListElement = document.getElementById('sortedList');
+            const ips = Array.from(sortedListElement.getElementsByTagName('li')).map(function(li) {
+                return li.textContent;
+            }).join('\n');
+
+            navigator.clipboard.writeText(ips).then(function() {
+                const copyMessage = document.getElementById('copyMessage');
+                copyMessage.textContent = '! Copied to Clipboard !';
+                setTimeout(function() {
+                    copyMessage.textContent = '📋 Copy to Clipboard';
+                }, 2000);
+            }, function() {
+                alert('Error occurred during copy.');
+            });
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleScrollToTopBtn() {
+            const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+            scrollToTopBtn.style.display = (window.scrollY > 200) ? 'block' : 'none';
+        }
+
+        function handleFileDrop(event) {
+            event.preventDefault();
+
+            const file = event.dataTransfer.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function() {
+                document.getElementById('ipList').value = reader.result;
+            };
+
+            reader.readAsText(file);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+        }
+
+        window.addEventListener('scroll', toggleScrollToTopBtn);
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
