@@ -12,7 +12,7 @@
         <h1 class="mb-4">IP Address Sorter</h1>
 
         <div class="form-group">
-            <label for="ipList">IP Addresses:</label>
+            <label for="ipList">IP Addresses (IPv4 or IPv6):</label>
             <textarea id="ipList" class="form-control" rows="4" cols="50" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)"></textarea>
         </div>
 
@@ -33,7 +33,15 @@
 
     <script>
         function isValidIP(ip) {
-            return /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
+            // IPv4 validáció
+            const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (ipv4Pattern.test(ip)) {
+                return true;
+            }
+
+            // IPv6 validáció
+            const ipv6Pattern = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+            return ipv6Pattern.test(ip);
         }
 
         function extractIPsFromText(text) {
@@ -41,7 +49,7 @@
             const ips = [];
 
             lines.forEach(function(line) {
-                const matches = line.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g);
+                const matches = line.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|([0-9a-fA-F:]+)/g);
 
                 if (matches) {
                     matches.forEach(function(match) {
@@ -56,9 +64,14 @@
         }
 
         function convertIP(ip) {
-            return ip.split('.').map(function(num) {
-                return num.padStart(3, '0');
-            }).join('.');
+            // IPv4 átalakítása
+            if (ip.includes('.')) {
+                return ip.split('.').map(function(num) {
+                    return num.padStart(3, '0');
+                }).join('.');
+            }
+            // IPv6 esetén csak visszaadjuk
+            return ip;
         }
 
         function sortIPs(ascending) {
@@ -132,6 +145,11 @@
         }
 
         window.addEventListener('scroll', toggleScrollToTopBtn);
+
+        // Az alábbi sor hozzáadása a fókusz beállításához
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('ipList').focus();
+        });
     </script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
